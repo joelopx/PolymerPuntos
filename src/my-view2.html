@@ -1,0 +1,215 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/iron-localstorage/iron-localstorage.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/byutv-jsonp/byutv-jsonp.html" />
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html" />
+<link rel="import" href="../bower_components/paper-card/paper-card.html" />
+<link rel="import" href="../bower_components/iron-a11y-keys/iron-a11y-keys.html" />
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+
+<link rel="import" href="app-data.html">
+<link rel="import" href="log-out.html">
+<link rel="import" href="my-icons.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-view2">
+  <template>
+    <style include="shared-styles">
+       :host {
+        display: block;
+        padding: 10px;
+      }
+      
+      .alert-error {
+        background: #ffcdd2;
+        border: 1px solid #f44336;
+        border-radius: 3px;
+        color: #333;
+        font-size: 14px;
+        padding: 10px;
+      }
+      paper-button:hover{
+        transition: box-shadow 0.50s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      paper-card{
+        transition: box-shadow 0.50s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      paper-card:hover {
+
+       transition: box-shadow 0.50s cubic-bezier(0.4, 0, 0.2, 1);
+    
+      @apply(--shadow-elevation-24dp);
+      }
+      paper-card:hover::after{transition: box-shadow 0.50s cubic-bezier(0.4, 0, 0.2, 1);}
+    </style>
+    <iron-localstorage name="user-storage" value="{{storedUser}}"></iron-localstorage>
+
+    <app-location route="{{route}}"></app-location>
+
+    <app-data key="userData" data="{{storedUser}}"></app-data>
+    
+    <paper-button raised on-tap="openModal">Dialog </paper-button>
+    
+    <paper-dialog id="modal" modal>
+    <paper-card class="card" >
+      <div class="card-content">
+      <div id="unauthenticated" hidden$="[[storedUser.loggedin]]">
+        <h1>Log In</h1>
+
+        <p><strong>Log in</strong> or <strong>sign up</strong> to Put Points and more POINTS !</p>
+
+        <template is="dom-if" if="[[error]]">
+          <p class="alert-error"><strong>Error: [[error]]</strong> </p>
+        </template>
+        <!--User Input-->
+        <paper-input id="username" 
+                     label="User Here" 
+                     required auto-validate 
+                     error-message="Complete this!" 
+                     type="text" value="{{formData.username}}">
+                  
+                  <iron-icon icon="icons:mail" prefix></iron-icon>
+                  <div suffix>@openix.com.ar</div>
+                  </paper-icon-button>
+        </paper-input>
+
+        <!--Password Input-->
+        <paper-input id="password" 
+                     label="Password Here" 
+                     required auto-validate 
+                     error-message="Complete this!" 
+                     type="password" value="{{formData.password}}">
+                     
+        </paper-input>
+        <iron-a11y-keys id="a11y" keys="enter"
+                on-keys-pressed="checkForEnter"></iron-a11y-keys>
+        <div class="wrapper-btns">
+          
+          <paper-button id="btn_login" autofocus raised class="primary" on-tap="postLogin"
+                        disabled$="[[disabled]]">
+ 
+            Log In</paper-button>
+          <paper-button class="link" raised on-tap="postRegister">Sign Up</paper-button>
+        </div>
+      </div>
+      <div id="authenticated" hidden$="[[!storedUser.loggedin]]">
+        <h2>Hello, [[storedUser.name]]!</h2>
+        <p>You are currently logged in. You can access <a href="/view3">Points</a>!</p>
+        <log-out stored-user="{{storedUser}}"></log-out>
+      </div>
+      </div>
+    </paper-card>
+    </paper-dialog>
+    <iron-ajax id="registerLoginAjax" 
+               method="post" 
+               content-type="application/x-www-form-urlencoded" 
+               handle-as="json" 
+               on-response="handleUserResponse"
+               on-error="handleUserError"
+    
+               ></iron-ajax>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'my-view2',
+      properties: {
+        formData: {
+          type: Object,
+          value: {
+            username:"",
+            password:""
+          }
+        },
+        storedUser: Object,
+        errors:[],
+        error: String,
+        disabled: true,
+      },
+      observers:[
+            'nameOrPasswordChange(formData.username,formData.password)'
+      ],
+      openModal: function(){
+           this.$.modal.toggle();
+      },
+      checkForEnter: function(){
+          if(this.$.btn_login.disabled==false){
+          this.postLogin();
+          }
+      },
+      nameOrPasswordChange: function(username,password){
+          if((username.length<1 || password.length<1))
+          {this.disabled= true;}
+          else{this.disabled= false;}    
+               
+      },
+      _setReqBody: function () {
+        this.formData.grant_type="password";
+        this.formData.username=this.formData.username+"@openix.com.ar";
+        this.$.registerLoginAjax.body = this.formData;
+      },
+      postLogin: function () {
+        this.$.registerLoginAjax.url = 'http://localhost:2899/api/Account/Login';
+        this._setReqBody();
+        this.$.registerLoginAjax.body=this.formData;
+        this.$.registerLoginAjax.generateRequest();
+      },
+      postRegister: function () {
+        this.$.registerLoginAjax.url = 'http://localhost:3001/users';
+        this._setReqBody();
+        this.$.registerLoginAjax.generateRequest();
+      },
+      handleUserResponse: function (event) {
+       
+         var data = JSON.parse(event.detail.__data__.xhr.response);   
+        if (data.access_token) {
+          
+          this.error = '';
+          this.storedUser = {
+            name: data.userName,
+            token: data.access_token,
+            loggedin: true
+          };
+          
+          this.set('route.path', '/view3');
+          // location.reload();
+        }
+
+        // reset form data
+        this.formData = {};
+        this.$.username.invalid = false;
+        this.$.password.invalid = false;
+      },
+      handleUserError: function (event) {
+        var jqXHR = event.detail.request.__data__.xhr;
+        var data= event.detail.request.__data__;     
+        this.error=jqXHR.status + ': ' + jqXHR.statusText;
+
+        if(this.error="0:")this.error="Unknown Error Connection Refused!";
+        var response = (jqXHR.response);
+        if (response) {
+          if (response.Message){var message=JSON.parse(response.Message);
+            
+            this.error=JSON.stringify(''+message.error_description+'');
+          }   
+
+        }
+       
+       }
+
+    });
+  </script>
+</dom-module>
