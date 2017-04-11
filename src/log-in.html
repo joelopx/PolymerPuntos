@@ -8,6 +8,7 @@
 <link rel="import" href="../bower_components/paper-card/paper-card.html" />
 <link rel="import" href="../bower_components/iron-a11y-keys/iron-a11y-keys.html" />
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html" />
 
 <link rel="import" href="app-data.html">
 <link rel="import" href="log-out.html">
@@ -40,7 +41,10 @@
                 color: #fff;
                 font-weight: bold;
       }
-
+      .reload{
+        padding:0;
+        border-radius: 5px;
+      }
       paper-card{
 
         @apply(--shadow-none);
@@ -50,9 +54,6 @@
     <iron-localstorage name="user-storage" value="{{storedUser}}"></iron-localstorage>
     <app-location route="{{route}}"></app-location>
     <app-data key="userData" data="{{storedUser}}"></app-data>
-    
-
-        
 
     <paper-dialog id="modal" with-backdrop class="card">
       <div id="unauthenticated" hidden$="[[storedUser.loggedin]]">
@@ -103,9 +104,10 @@
         <paper-button id="logout" raised on-tap="logout">Log Out</paper-button>
 
       </div>
-      <paper-dialog id="modalSpinner" with-backdrop>
-        <paper-spinner id="spinner"></paper-spinner>
-      </paper-dialog>
+      
+    </paper-dialog>
+    <paper-dialog id="modalSpinner" modal class="reload card">
+        <paper-spinner id="spinner" active></paper-spinner>
     </paper-dialog>
     <iron-ajax id="registerLogoutAjax" 
                method="post" 
@@ -121,6 +123,7 @@
                handle-as="json" 
                on-response="handleUserResponse"
                on-error="handleUserError"
+               last-error="{{error}}"
                ></iron-ajax>
     </template>
 
@@ -135,9 +138,10 @@
             password:""
           }
         },
+        ModelState: Object,
         storedUser: Object,
         errors:[],
-        error: String,
+        error: Object,
         disabled: true,
         opened:{
           type: Boolean,  
@@ -172,7 +176,7 @@
           }
       },
       nameOrPasswordChange: function(username,password){
-          if((username.length<1 || password.length<1))
+          if((username.length<1 || password.length<6))
           {this.disabled= true;}
           else{this.disabled= false;}    
                
@@ -197,18 +201,14 @@
         this.$.registerLoginAjax.body = data;
       },
       postLogin: function () {
+
         this.$.modalSpinner.open();
-        this.$.spinner.active=true;
+        this.$.modal.close();
         this.$.registerLoginAjax.url = 'http://localhost:2899/api/Account/Login';
         this._setReqBody();
         this.$.registerLoginAjax.generateRequest();
         
       },
-      // postRegister: function () {
-      //   this.$.registerLoginAjax.url = 'http://localhost:3001/users';
-      //   this._setReqBody();
-      //   this.$.registerLoginAjax.generateRequest();
-      // },
       handleUserResponse: function (event) {
   
          var data = JSON.parse(event.detail.__data__.xhr.response);
@@ -223,8 +223,7 @@
             loggedin: true
           };
           this.$.modalSpinner.close();
-           this.$.modal.close();
-           this.set('route.path', '/view3');
+          //  this.set('route.path', '/view3');
 
         }
         }
@@ -233,19 +232,38 @@
 
       },
       handleUserError: function (event) {
-        var jqXHR = event.detail.request.__data__.xhr;
-        var data= event.detail.request.__data__;     
-        this.error=jqXHR.status + ': ' + jqXHR.statusText;
+        if(this.error){
+          if(this.error.response){
+            if(this.error.response.Message){
+                // this.errors[0].message =this.error.response.Message;
+                console.log(this.error.response.Message);
+                
+            }
+            if(this.error.response.ModelState){
+                this.ModelState=this.error.response.ModelState;
 
-        if(this.error="0:")this.error="Unknown Error!";
-        var response = (jqXHR.response);
-        if (response) {
-          console.log(response);
-          if (response.Message){this.error=(response.Message);
-          }   
+                console.log(this.ModelState);
+            }
 
+          }
+
+          console.log(this.errors);
         }
-        this.$.modalSpinner.close();
+        // var jqXHR = event.detail.request.__data__.xhr;
+        // var data= event.detail.request.__data__;     
+        // this.error=jqXHR.status + ': ' + jqXHR.statusText;
+
+        // if(this.error="0:")this.error="Unknown Error!";
+        // var response = (jqXHR.response);
+        // if (response) {
+        //   if (response.Message){this.error=(response.Message);
+        //   }   
+
+        // }
+        // this.$.modalSpinner.close();
+        // this.$.modal.open();
+        console.log(event);
+        console.log(this.error);
        }
        
     });
