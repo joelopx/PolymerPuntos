@@ -8,6 +8,7 @@
 <link rel="import" href="../bower_components/paper-card/paper-card.html" />
 <link rel="import" href="../bower_components/iron-a11y-keys/iron-a11y-keys.html" />
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html" />
+<link rel="import" href="../bower_components/paper-spinner/paper-spinner.html" />
 
 <link rel="import" href="app-data.html">
 <link rel="import" href="log-out.html">
@@ -16,7 +17,7 @@
 
 <dom-module id="log-in">
     <template>
-        <style include="shared-styles">
+    <style include="shared-styles">
        :host {
         display: block;
         padding: 10px;
@@ -40,10 +41,18 @@
                 color: #fff;
                 font-weight: bold;
       }
-
-      paper-card{
-
-        @apply(--shadow-none);
+      app-header .greeting,
+      a {
+        color: #fff;
+        font-size: 20px;
+        text-decoration: none;
+        font-weight: normal;
+      }
+      
+      app-header .greeting {
+        border-right: 1px solid rgba(255, 255, 255, .5);
+        display: inline-block;
+        padding-right: 6px;
       }
 
     </style>
@@ -53,16 +62,24 @@
     
 
         
-
+    <a href  hidden$="[[storedUser.loggedin]]" on-tap="openM">Log In</a>
+    
+    <div hidden$="[[!storedUser.loggedin]]" class="greeting">
+              <a  href on-tap="openM">Hi [[storedUser.name]]! |</a>
+              <log-out stored-user="{{storedUser}}" link></log-out>
+    </div>
+    <!--Dialog Login-->
     <paper-dialog id="modal" with-backdrop class="card">
+
       <div id="unauthenticated" hidden$="[[storedUser.loggedin]]">
         <h1>Log In</h1>
         <div class="card-content">
+
         <p><strong>Log in</strong> or <strong>sign up</strong> to Put Points and more POINTS !</p>
 
-        <template is="dom-if" if="[[error]]">
-           <p class="alert-error"><strong>Error: [[error]]</strong> </p>
-        </template>       
+        <!--<template is="dom-if" if="[[error]]">-->
+        <p class="alert-error" disabled$="[[!error]]"><strong>Error: [[error]]</strong> </p>
+        <!--</template>       -->
         <!--User Input-->
         <paper-input id="username" 
                      label="User Here" 
@@ -79,21 +96,21 @@
                      label="Password Here" 
                      required auto-validate 
                      error-message="Complete this!" 
-                     type="password" value="{{formData.password}}">
-                     
+                     type="password" value="{{formData.password}}">         
         </paper-input>
+        <!--Allows Enter-->
         <iron-a11y-keys id="a11y" keys="enter"
                 on-keys-pressed="checkForEnter"></iron-a11y-keys>
-        <div class="wrapper-btns buttons card-actions">
-          
-          <paper-button id="btn_login" autofocus 
+        <!--Buttons-->
+        <div class="wrapper-btns card-actions buttons">
+          <paper-button id="btn_login" autofocus
                         raised class="primary" on-tap="postLogin"
                         disabled$="[[disabled]]">Log In</paper-button>
 
-          <paper-button raised class="link" dialog-dismiss on-tap="cleanData">Cancelar</paper-button>
+          <paper-button dialog-dismiss 
+                        on-tap="cleanData">Cancelar</paper-button>
         </div>
       </div>
-      
       </div>
       <div id="authenticated" hidden$="[[!storedUser.loggedin]]">
 
@@ -103,8 +120,8 @@
         <paper-button id="logout" raised on-tap="logout">Log Out</paper-button>
 
       </div>
-      <paper-dialog id="modalSpinner" with-backdrop>
-        <paper-spinner id="spinner"></paper-spinner>
+      <paper-dialog id="modalSpinner" modal>
+        <paper-spinner id="spinner" active></paper-spinner>
       </paper-dialog>
     </paper-dialog>
     <iron-ajax id="registerLogoutAjax" 
@@ -151,8 +168,7 @@
           'modal.iron-overlay-closed':'onCloseDialog'
       },
       onCloseDialog: function(e){
-        this.cleanData();
-           
+        this.cleanData();      
       },
       cleanData:function(){
           this.formData = {
@@ -163,7 +179,9 @@
         this.$.username.invalid = false;
         this.$.password.invalid = false;
       },
-      _isOpen:function(){
+      openM:function(){
+           var node= this.$.modal;
+           document.body.appendChild(node);
            this.$.modal.open();
       },
       checkForEnter: function(){
@@ -197,18 +215,14 @@
         this.$.registerLoginAjax.body = data;
       },
       postLogin: function () {
+        this.$.modalSpinner.modal=true;
         this.$.modalSpinner.open();
-        this.$.spinner.active=true;
+        
         this.$.registerLoginAjax.url = 'http://localhost:2899/api/Account/Login';
         this._setReqBody();
         this.$.registerLoginAjax.generateRequest();
         
       },
-      // postRegister: function () {
-      //   this.$.registerLoginAjax.url = 'http://localhost:3001/users';
-      //   this._setReqBody();
-      //   this.$.registerLoginAjax.generateRequest();
-      // },
       handleUserResponse: function (event) {
   
          var data = JSON.parse(event.detail.__data__.xhr.response);
@@ -222,7 +236,7 @@
             token: data.access_token,        
             loggedin: true
           };
-          this.$.modalSpinner.close();
+           this.$.modalSpinner.close();
            this.$.modal.close();
            this.set('route.path', '/view3');
 
