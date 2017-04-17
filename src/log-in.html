@@ -51,10 +51,12 @@
       }
 
     </style>
+    <!--Storage Data-->
     <iron-localstorage name="user-storage" value="{{storedUser}}"></iron-localstorage>
     <app-location route="{{route}}"></app-location>
     <app-data key="userData" data="{{storedUser}}"></app-data>
 
+    <!--Dialog Login-->
     <paper-dialog id="modal" with-backdrop class="card">
       <div id="unauthenticated" hidden$="[[storedUser.loggedin]]">
         <h1>Log In</h1>
@@ -83,15 +85,19 @@
                      type="password" value="{{formData.password}}">
                      
         </paper-input>
-        <iron-a11y-keys id="a11y" keys="enter"
-                on-keys-pressed="checkForEnter"></iron-a11y-keys>
+        
+        <iron-a11y-keys id="a11y" 
+                        keys="enter"
+                        on-keys-pressed="checkForEnter"></iron-a11y-keys>
         <div class="wrapper-btns buttons card-actions">
           
-          <paper-button id="btn_login" autofocus 
+        <paper-button id="btn_login" autofocus 
                         raised class="primary" on-tap="postLogin"
                         disabled$="[[disabled]]">Log In</paper-button>
 
-          <paper-button raised class="link" dialog-dismiss on-tap="cleanData">Cancelar</paper-button>
+        <paper-button raised class="link" 
+                      dialog-dismiss 
+                      on-tap="_cleanData">Cancelar</paper-button>
         </div>
       </div>
       
@@ -101,7 +107,7 @@
         <h2>Hello, [[storedUser.name]]!</h2>
         <p>You are currently logged in. You can access <strong>Points</strong>!</p>
 
-        <paper-button id="logout" raised on-tap="logout">Log Out</paper-button>
+        <log-out stored-user="{{storedUser}}">Log Out</log-out>
 
       </div>
       
@@ -109,14 +115,6 @@
     <paper-dialog id="modalSpinner" modal class="reload card">
         <paper-spinner id="spinner" active></paper-spinner>
     </paper-dialog>
-    <iron-ajax id="registerLogoutAjax" 
-               method="post" 
-               content-type="application/x-www-form-urlencoded" 
-               handle-as="json" 
-               on-response="handleUserResponse"
-               on-error="handleUserError"   
-               ></iron-ajax>
-
     <iron-ajax id="registerLoginAjax" 
                method="post" 
                content-type="application/x-www-form-urlencoded" 
@@ -152,56 +150,52 @@
             'nameOrPasswordChange(formData.username,formData.password)'
       ],
       listeners:{
-          'modal.iron-overlay-closed':'onCloseDialog'
+          'modal.iron-overlay-canceled':'_onCloseDialog',
+          'logout':'_onLogout'
       },
-      onCloseDialog: function(e){
-        this.cleanData();
-           
+      //        observers fire //
+       _isOpen:function(){
+           this.$.modal.open();
       },
-      cleanData:function(){
+      nameOrPasswordChange: function(username,password){
+          if(username != null && password !=null){
+            if((username.length<1 || password.length<6))
+            {this.disabled= true;}
+            else
+            {this.disabled= false;}    
+          }
+      },
+      //        listeners fire  //
+      _onCloseDialog: function(){
+        this._cleanData();       
+      },
+       _onLogout: function () {
+          this.$.modal.close();
+          this._cleanData();
+      },
+      //        helpers        //
+      _cleanData:function(){
           this.formData = {
-              username:"",
-              password:""
-        };
+            username:"",
+            password:""
+          };
         this.error=null;
         this.$.username.invalid = false;
         this.$.password.invalid = false;
       },
-      _isOpen:function(){
-           this.$.modal.open();
-      },
-      checkForEnter: function(){
-          if(this.$.btn_login.disabled==false){
-             this.postLogin();
-          }
-      },
-      nameOrPasswordChange: function(username,password){
-          if((username.length<1 || password.length<6))
-          {this.disabled= true;}
-          else{this.disabled= false;}    
-               
-      },
-      logout: function () {
-          // remove user data
-          var headers = {};
-          if (this.storedUser.token) {
-              headers.Authorization = 'Bearer ' + this.storedUser.token;
-          }
-          this.$.modal.close();
-          this.storedUser = null;
-          this.$.registerLogoutAjax.headers= headers;
-          this.$.registerLogoutAjax.url = 'http://localhost:2899/api/Account/Logout';
-          this.$.registerLogoutAjax.generateRequest();
-          this.cleanData();
-      },
-      _setReqBody: function () {
+     _setReqBody: function () {
         var data=JSON.parse(JSON.stringify(this.formData));
         data.grant_type="password";
         data.username=data.username+"@openix.com.ar";
         this.$.registerLoginAjax.body = data;
       },
-      postLogin: function () {
-
+      //       functions       //
+      checkForEnter: function(){
+          if(this.$.btn_login.disabled==false){
+             this.postLogin();
+          }
+      },   
+      postLogin: function (){
         this.$.modalSpinner.open();
         this.$.modal.close();
         this.$.registerLoginAjax.url = 'http://localhost:2899/Token';
@@ -211,7 +205,7 @@
       },
       handleUserResponse: function (event) {
   
-         var data = event.detail.__data__.xhr.response;
+        var data = event.detail.__data__.xhr.response;
  
         if(data){
         if (data.access_token) {
@@ -223,13 +217,8 @@
             loggedin: true
           };
           this.$.modalSpinner.close();
-          //  this.set('route.path', '/view3');
-
         }
         }
-
-        // reset form data
-
       },
       handleUserError: function (event) {
         if(this.error){
