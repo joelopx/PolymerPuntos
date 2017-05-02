@@ -35,13 +35,11 @@
         <template is="dom-if" if="{{link}}">
             <a on-tap="logout" href>Log Out</a>
         </template>
-        <iron-ajax id="registerLoginAjax" 
+
+        <iron-ajax id="registerLogoutAjax" 
                method="post" 
-               content-type="application/x-www-form-urlencoded" 
+               content-type="application/json" 
                handle-as="json" 
-               on-response="handleUserResponse"
-               on-error="handleUserError"
-    
                ></iron-ajax>
     </template>
 
@@ -57,8 +55,15 @@
                     }
                 },
                 logout: function () {
-                    // remove user data
-                    this.storedUser = null;
+                     var headers = {};
+                     if (this.storedUser.token) {
+                        headers.Authorization = 'Bearer ' + this.storedUser.token;
+                     }
+                     this.storedUser = null;
+                     this.$.registerLogoutAjax.headers= headers;
+                     this.$.registerLogoutAjax.url = 'http://localhost:2899/api/Account/Logout';
+                     this.$.registerLogoutAjax.generateRequest();
+                     this.fire('logout');
                 }
             });
         }());

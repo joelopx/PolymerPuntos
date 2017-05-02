@@ -9,6 +9,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-textarea.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-view1">
@@ -19,26 +24,98 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         padding: 10px;
       }
+      paper-button {
+                background: #fff;
+                color: #64B5F6;
+                font-weight: bold;
+                font-size: 15px;
+            }
+     .card-content{
+       height: 100px;
+       width: 300px;
+     }
+     .card-actions{
+       text-align: right;
+     }
+     .card{
+       padding-bottom: 0;
+       margin-right: 5px;
+       padding-right: 0;
+     }
+     paper-dialog{
+       border-radius: 5px;
+       width: 300px;
+     }
     </style>
+      <template is="dom-repeat" items="{{users}}">
+          
+          <paper-card heading="{{item.UserName}}" image="" elevation="1" animated-shadow="false" class="card">
+            <div class="card-content">
+              <div>UserName: <p>{{item.UserName}}</p></div>
+              <div>Points: <span>{{item.PointsQuantity}}</span></div>
+            </div>
+            <div class="card-actions">
+                <paper-button on-tap="postPoint">
+                  Point!
+                </paper-button>
+            </div>
+          </paper-card>
+          
+      </template>
+      
+      <paper-dialog id="myDialog">
+        <h1>[[user.UserName]]</h1>    
+        <paper-textarea char-counter value="{{point.reason}}" label="Reason Here"></paper-textarea>
+        <paper-input label="Quantity Here" value="{{point.quantity}}" type="number" max="5" min="1"></paper-input>
 
-    <div class="card">
-          <h1>Quotes!!</h1>
-          <blockquote>[[quote]]</blockquote>
-          <paper-button class="primary" raised on-tap="getQuote">Get a New Quote</paper-button>
+        <div class="wrapper-btns buttons card-actions">
+          
+            <paper-button id="btn_punto" 
+                          raised 
+                          
+                          >Punto!</paper-button>
+
+            <paper-button raised class="link" 
+                          dialog-dismiss on-tap="cleanData">Cancelar</paper-button>
       </div>
+      </paper-dialog>
+      
       <iron-ajax id="getQuoteAjax" 
+                 auto
                  method="get" 
-                 url="http://localhost:3001/api/random-quote" 
-                 handle-as="text" 
-                 last-response="{{quote}}"></iron-ajax>
+                 url="http://localhost:2899/api/User" 
+                 handle-as="json" 
+                 on-response="handleResponse"
+                 on-error="handleError"
+                 last-error="{{error}}"></iron-ajax>
   </template>
 
   <script>
     Polymer({
       is: 'my-view1',
+      properties:{
+          error: Object,
+          users:[],
+          user: Object,
+          point:{}
+      },
       getQuote: function(){
-         this.$.getQuoteAjax.generateRequest();
+          this.$.getQuoteAjax.generateRequest();
+      },
+      handleResponse:function(event){
+          this.users = event.detail.__data__.xhr.response;
+      },
+      handleError:function(event){
+      },
+      postPoint:function(e){
+         var item = e.model.item;
+         this.user=item;
+         this.$.myDialog.open();
+      },
+      cleanData:function(){
+          this.point={}
       }
+      
     });
   </script>
 </dom-module>

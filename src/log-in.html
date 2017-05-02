@@ -41,6 +41,7 @@
                 color: #fff;
                 font-weight: bold;
       }
+<<<<<<< HEAD
       app-header .greeting,
       a {
         color: #fff;
@@ -53,12 +54,23 @@
         border-right: 1px solid rgba(255, 255, 255, .5);
         display: inline-block;
         padding-right: 6px;
+=======
+      .reload{
+        padding:0;
+        border-radius: 5px;
+      }
+      paper-card{
+
+        @apply(--shadow-none);
+>>>>>>> beginDevelopOrg
       }
 
     </style>
+    <!--Storage Data-->
     <iron-localstorage name="user-storage" value="{{storedUser}}"></iron-localstorage>
     <app-location route="{{route}}"></app-location>
     <app-data key="userData" data="{{storedUser}}"></app-data>
+<<<<<<< HEAD
     
 
         
@@ -68,6 +80,9 @@
               <a  href on-tap="openM">Hi [[storedUser.name]]! |</a>
               <log-out stored-user="{{storedUser}}" link></log-out>
     </div>
+=======
+
+>>>>>>> beginDevelopOrg
     <!--Dialog Login-->
     <paper-dialog id="modal" with-backdrop class="card">
 
@@ -98,6 +113,7 @@
                      error-message="Complete this!" 
                      type="password" value="{{formData.password}}">         
         </paper-input>
+<<<<<<< HEAD
         <!--Allows Enter-->
         <iron-a11y-keys id="a11y" keys="enter"
                 on-keys-pressed="checkForEnter"></iron-a11y-keys>
@@ -109,6 +125,21 @@
 
           <paper-button dialog-dismiss 
                         on-tap="cleanData">Cancelar</paper-button>
+=======
+        
+        <iron-a11y-keys id="a11y" 
+                        keys="enter"
+                        on-keys-pressed="checkForEnter"></iron-a11y-keys>
+        <div class="wrapper-btns buttons card-actions">
+          
+        <paper-button id="btn_login" autofocus 
+                        raised class="primary" on-tap="postLogin"
+                        disabled$="[[disabled]]">Log In</paper-button>
+
+        <paper-button raised class="link" 
+                      dialog-dismiss 
+                      on-tap="_cleanData">Cancelar</paper-button>
+>>>>>>> beginDevelopOrg
         </div>
       </div>
       </div>
@@ -117,27 +148,27 @@
         <h2>Hello, [[storedUser.name]]!</h2>
         <p>You are currently logged in. You can access <strong>Points</strong>!</p>
 
-        <paper-button id="logout" raised on-tap="logout">Log Out</paper-button>
+        <log-out stored-user="{{storedUser}}">Log Out</log-out>
 
       </div>
+<<<<<<< HEAD
       <paper-dialog id="modalSpinner" modal>
         <paper-spinner id="spinner" active></paper-spinner>
       </paper-dialog>
+=======
+      
     </paper-dialog>
-    <iron-ajax id="registerLogoutAjax" 
-               method="post" 
-               content-type="application/x-www-form-urlencoded" 
-               handle-as="json" 
-               on-response="handleUserResponse"
-               on-error="handleUserError"   
-               ></iron-ajax>
-
+    <paper-dialog id="modalSpinner" modal class="reload card">
+        <paper-spinner id="spinner" active></paper-spinner>
+>>>>>>> beginDevelopOrg
+    </paper-dialog>
     <iron-ajax id="registerLoginAjax" 
                method="post" 
                content-type="application/x-www-form-urlencoded" 
                handle-as="json" 
                on-response="handleUserResponse"
                on-error="handleUserError"
+               last-error="{{error}}"
                ></iron-ajax>
     </template>
 
@@ -152,9 +183,10 @@
             password:""
           }
         },
+        ModelState: Object,
         storedUser: Object,
         errors:[],
-        error: String,
+        error: Object,
         disabled: true,
         opened:{
           type: Boolean,  
@@ -165,6 +197,7 @@
             'nameOrPasswordChange(formData.username,formData.password)'
       ],
       listeners:{
+<<<<<<< HEAD
           'modal.iron-overlay-closed':'onCloseDialog'
       },
       onCloseDialog: function(e){
@@ -182,50 +215,72 @@
       openM:function(){
            var node= this.$.modal;
            document.body.appendChild(node);
+=======
+          'modal.iron-overlay-canceled':'_onCloseDialog',
+          'logout':'_onLogout'
+      },
+      //        observers fire //
+       _isOpen:function(){
+>>>>>>> beginDevelopOrg
            this.$.modal.open();
       },
-      checkForEnter: function(){
-          if(this.$.btn_login.disabled==false){
-             this.postLogin();
-          }
-      },
       nameOrPasswordChange: function(username,password){
-          if((username.length<1 || password.length<1))
-          {this.disabled= true;}
-          else{this.disabled= false;}    
-               
-      },
-      logout: function () {
-          // remove user data
-          var headers = {};
-          if (this.storedUser.token) {
-              headers.Authorization = 'Bearer ' + this.storedUser.token;
+          if(username != null && password !=null){
+            if((username.length<1 || password.length<6))
+            {this.disabled= true;}
+            else
+            {this.disabled= false;}    
           }
-          this.$.modal.close();
-          this.storedUser = null;
-          this.$.registerLogoutAjax.headers= headers;
-          this.$.registerLogoutAjax.url = 'http://localhost:2899/api/Account/Logout';
-          this.$.registerLogoutAjax.generateRequest();
-          this.cleanData();
       },
-      _setReqBody: function () {
+      //        listeners fire  //
+      _onCloseDialog: function(){
+        this._cleanData();       
+      },
+       _onLogout: function () {
+          this.$.modal.close();
+          this._cleanData();
+      },
+      //        helpers        //
+      _cleanData:function(){
+          this.formData = {
+            username:"",
+            password:""
+          };
+        this.error=null;
+        this.$.username.invalid = false;
+        this.$.password.invalid = false;
+      },
+     _setReqBody: function () {
         var data=JSON.parse(JSON.stringify(this.formData));
         data.grant_type="password";
         data.username=data.username+"@openix.com.ar";
         this.$.registerLoginAjax.body = data;
       },
+<<<<<<< HEAD
       postLogin: function () {
         this.$.modalSpinner.modal=true;
         this.$.modalSpinner.open();
         
         this.$.registerLoginAjax.url = 'http://localhost:2899/api/Account/Login';
+=======
+      //       functions       //
+      checkForEnter: function(){
+          if(this.$.btn_login.disabled==false){
+             this.postLogin();
+          }
+      },   
+      postLogin: function (){
+        this.$.modalSpinner.open();
+        this.$.modal.close();
+        this.$.registerLoginAjax.url = 'http://localhost:2899/Token';
+>>>>>>> beginDevelopOrg
         this._setReqBody();
         this.$.registerLoginAjax.generateRequest();
         
       },
       handleUserResponse: function (event) {
   
-         var data = JSON.parse(event.detail.__data__.xhr.response);
+        var data = event.detail.__data__.xhr.response;
  
         if(data){
         if (data.access_token) {
@@ -236,32 +291,34 @@
             token: data.access_token,        
             loggedin: true
           };
+<<<<<<< HEAD
            this.$.modalSpinner.close();
            this.$.modal.close();
            this.set('route.path', '/view3');
 
+=======
+          this.$.modalSpinner.close();
+>>>>>>> beginDevelopOrg
         }
         }
-
-        // reset form data
-
       },
       handleUserError: function (event) {
-        var jqXHR = event.detail.request.__data__.xhr;
-        var data= event.detail.request.__data__;     
-        this.error=jqXHR.status + ': ' + jqXHR.statusText;
-
-        if(this.error="0:")this.error="Unknown Error!";
-        var response = (jqXHR.response);
-        if (response) {
-          console.log(response);
-          if (response.Message){this.error=(response.Message);
-          }   
-
+        if(this.error){
+          if(this.error.response){
+            if(this.error.response.error_description){
+                this.error =this.error.response.error_description;  
+            }
+          }else{
+          if(this.error.response==null){
+            
+            this.error="Connection Refused!";
+          }
+          }
+          
         }
         this.$.modalSpinner.close();
+        this.$.modal.open();   
        }
-       
     });
   
     </script>
