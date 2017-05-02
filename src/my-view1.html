@@ -104,10 +104,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
       handleResponse:function(event){
           this.users = event.detail.__data__.xhr.response;
-          console.log(event);
       },
       handleError:function(event){
-          console.log(event);
       },
       postPoint:function(e){
          var item = e.model.item;

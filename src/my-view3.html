@@ -27,14 +27,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <app-data key="userData" data="{{storedUser}}"></app-data>
     <div class="card">
-      <h1>Secret Quotes</h1>
+      <h1>Secret</h1>
       <div hidden$="[[!storedUser.loggedin]]">
-        <p>Hello, [[storedUser.name]]! You have access to secret quotes:</p>
+        <p>Hello, [[storedUser.name]]! You have access to secret</p>
         <blockquote>[[secretQuote]]</blockquote>
-        <paper-button class="primary" raised on-tap="getSecretQuote">Get a New Secret Quote</paper-button>
+        <paper-button class="primary" raised on-tap="getSecretQuote">Get </paper-button>
       </div>
 
-      <p hidden$="[[storedUser.loggedin]]">You must <a href="/view2">log in</a> to access secret quotes!</p>
+      <p hidden$="[[storedUser.loggedin]]">You must <a href="/view2">log in</a> to access secret!</p>
     </div>
     <iron-ajax id="getSecretQuoteAjax" 
                method="get" 
@@ -50,13 +50,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         storedUser: Object
       },
       initStoredUser: function () {
-        // if entering site on the secret quotes page, verify if logged in and if so, preload a secret quote
         if (this.storedUser.loggedin) {
           this.getSecretQuote();
         }
       },
       getSecretQuote: function () {
-        // add token authorization and generate Ajax request
         this.$.getSecretQuoteAjax.headers['Authorization'] = 'Bearer ' + this.storedUser.token;
         this.$.getSecretQuoteAjax.generateRequest();
       }
