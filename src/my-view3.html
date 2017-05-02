@@ -36,11 +36,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <p hidden$="[[storedUser.loggedin]]">You must <a href="/view2">log in</a> to access secret!</p>
     </div>
-    <iron-ajax id="getSecretQuoteAjax" 
-               method="get" 
-               url="http://localhost:3001/api/protected/random-quote" 
-               handle-as="text" 
-               last-response="{{secretQuote}}"></iron-ajax>
   </template>
 
   <script>
@@ -53,10 +48,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         if (this.storedUser.loggedin) {
           this.getSecretQuote();
         }
-      },
-      getSecretQuote: function () {
-        this.$.getSecretQuoteAjax.headers['Authorization'] = 'Bearer ' + this.storedUser.token;
-        this.$.getSecretQuoteAjax.generateRequest();
       }
     });
   </script>
